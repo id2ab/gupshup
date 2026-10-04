@@ -261,45 +261,38 @@ io.on(
 
 
         // =========================
-        // LOCATION
-        // =========================
+// LOCATION
+// =========================
 
-        socket.on(
-            "location",
-            (location) => {
+socket.on("location", (location) => {
 
-                const user =
-                    getUser(
-                        socket.deviceId
-                    );
+    const user = getUser(socket.deviceId);
 
+    if (!user) {
+        console.log("LOCATION ERROR: user not found");
+        return;
+    }
 
-                if (!user)
-                    return;
-
-
-                if (
-                    !location ||
-                    typeof location.lat !==
-                        "number" ||
-                    typeof location.lng !==
-                        "number"
-                ) {
-
-                    return;
-
-                }
-
-
-                user.lat =
-                    location.lat;
-
-                user.lng =
-                    location.lng;
-
-            }
+    if (
+        !location ||
+        typeof location.lat !== "number" ||
+        typeof location.lng !== "number"
+    ) {
+        console.log(
+            "LOCATION INVALID:",
+            socket.deviceId
         );
+        return;
+    }
 
+    user.lat = location.lat;
+    user.lng = location.lng;
+
+    console.log(
+        "LOCATION OK:",
+        socket.deviceId
+    );
+});
 
         // =========================
         // RADAR
