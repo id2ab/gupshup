@@ -414,6 +414,7 @@ io.on(
                     // 25 KM RADAR RANGE
                     // =========================
 
+                    console.log("RADAR DISTANCE:", currentUser.deviceId, "->", user.deviceId, distance, "KM");
                     if (distance <= 25) {
 
                         radarUsers.push(
