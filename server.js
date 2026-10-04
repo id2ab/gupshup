@@ -259,6 +259,12 @@ io.on(
                     "| Socket:",
                     socket.id
                 );
+                console.log(
+                "DEVICE INFO:",
+                socket.deviceId,
+                "| User-Agent:",
+                socket.handshake.headers["user-agent"]
+                );
 
 
                 socket.emit(
