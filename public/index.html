@@ -1,1 +1,2725 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>GupShup - Anonymous Radar</title>
+
+<style>
+
+/* =========================
+   RESET
+========================= */
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+
+    font-family:Arial,sans-serif;
+
+    background:#080d18;
+
+    color:white;
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+}
+
+
+/* =========================
+   APP
+========================= */
+
+.app{
+
+    width:100%;
+
+    max-width:480px;
+
+    height:100vh;
+
+    overflow:hidden;
+
+    position:relative;
+
+    background:#080d18;
+}
+
+
+/* =========================
+   MAIN HEADER
+========================= */
+
+.header{
+
+    height:72px;
+
+    padding:13px 18px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    background:rgba(10,16,30,.96);
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.logo{
+
+    font-size:27px;
+
+    font-weight:800;
+}
+
+.logo span{
+
+    color:#42e8a4;
+}
+
+.subtitle{
+
+    color:#94a3b8;
+
+    font-size:11px;
+
+    margin-top:3px;
+}
+
+.online{
+
+    font-size:11px;
+
+    color:#42e8a4;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.status{
+
+    position:absolute;
+
+    z-index:20;
+
+    top:82px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:rgba(15,23,42,.9);
+
+    border:1px solid rgba(255,255,255,.1);
+
+    padding:7px 13px;
+
+    border-radius:20px;
+
+    font-size:11px;
+
+    white-space:nowrap;
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+.toast{
+
+    position:absolute;
+
+    top:115px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:#111827;
+
+    color:white;
+
+    padding:9px 14px;
+
+    border-radius:20px;
+
+    font-size:11px;
+
+    z-index:150;
+
+    display:none;
+
+    white-space:nowrap;
+}
+
+
+/* =========================
+   RADAR
+========================= */
+
+.radar-area{
+
+    height:calc(100vh - 72px);
+
+    position:relative;
+
+    overflow:hidden;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(20,184,166,.07),
+            transparent 42%
+        );
+}
+
+.radar{
+
+    position:absolute;
+
+    width:370px;
+
+    height:370px;
+
+    left:50%;
+
+    top:48%;
+
+    transform:translate(-50%,-50%);
+
+    border-radius:50%;
+
+    border:1px solid rgba(66,232,164,.25);
+
+    box-shadow:
+        0 0 40px rgba(66,232,164,.04),
+        inset 0 0 50px rgba(66,232,164,.03);
+}
+
+.ring{
+
+    position:absolute;
+
+    border:1px solid rgba(66,232,164,.18);
+
+    border-radius:50%;
+
+    left:50%;
+
+    top:50%;
+
+    transform:translate(-50%,-50%);
+}
+
+.r1{
+    width:280px;
+    height:280px;
+}
+
+.r2{
+    width:190px;
+    height:190px;
+}
+
+.r3{
+    width:100px;
+    height:100px;
+}
+
+.cross-v,
+.cross-h{
+
+    position:absolute;
+
+    background:rgba(66,232,164,.13);
+}
+
+.cross-v{
+
+    width:1px;
+
+    height:100%;
+
+    left:50%;
+
+    top:0;
+}
+
+.cross-h{
+
+    height:1px;
+
+    width:100%;
+
+    top:50%;
+
+    left:0;
+}
+
+
+/* =========================
+   RADAR SWEEP
+========================= */
+
+.sweep{
+
+    position:absolute;
+
+    width:50%;
+
+    height:2px;
+
+    left:50%;
+
+    top:50%;
+
+    transform-origin:left center;
+
+    background:linear-gradient(
+        90deg,
+        rgba(66,232,164,.8),
+        transparent
+    );
+
+    animation:scan 4s linear infinite;
+}
+
+@keyframes scan{
+
+    from{
+        transform:rotate(0deg);
+    }
+
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+
+/* =========================
+   YOU
+========================= */
+
+.you{
+
+    position:absolute;
+
+    left:50%;
+
+    top:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:66px;
+
+    height:66px;
+
+    border-radius:50%;
+
+    background:#102c29;
+
+    border:2px solid #42e8a4;
+
+    box-shadow:
+        0 0 0 8px rgba(66,232,164,.06),
+        0 0 30px rgba(66,232,164,.25);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:8;
+}
+
+.you-icon{
+
+    font-size:27px;
+}
+
+.you-label{
+
+    position:absolute;
+
+    top:calc(50% + 38px);
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    color:#42e8a4;
+
+    font-size:10px;
+
+    font-weight:bold;
+}
+
+
+/* =========================
+   RADAR PROFILE
+========================= */
+
+.radar-profile{
+
+    position:absolute;
+
+    width:54px;
+
+    height:54px;
+
+    border-radius:50%;
+
+    background:#182235;
+
+    border:2px solid #7dd3fc;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:27px;
+
+    cursor:pointer;
+
+    z-index:10;
+
+    box-shadow:0 5px 18px rgba(0,0,0,.4);
+
+    transition:.2s;
+}
+
+.radar-profile:hover{
+
+    transform:translate(-50%,-50%) scale(1.12);
+}
+
+.radar-profile .dot{
+
+    position:absolute;
+
+    width:9px;
+
+    height:9px;
+
+    right:1px;
+
+    bottom:1px;
+
+    border-radius:50%;
+
+    background:#42e8a4;
+
+    border:2px solid #182235;
+}
+
+.distance{
+
+    position:absolute;
+
+    top:55px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:rgba(15,23,42,.92);
+
+    color:#cbd5e1;
+
+    border-radius:10px;
+
+    padding:3px 6px;
+
+    font-size:8px;
+
+    white-space:nowrap;
+}
+
+
+/* =========================
+   BOTTOM RADAR INFO
+========================= */
+
+.bottom-info{
+
+    position:absolute;
+
+    bottom:18px;
+
+    left:15px;
+
+    right:15px;
+
+    text-align:center;
+
+    z-index:12;
+}
+
+.radar-help{
+
+    color:#94a3b8;
+
+    font-size:11px;
+}
+
+
+/* =========================
+   PROFILE MODAL
+========================= */
+
+.modal{
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:50;
+
+    background:rgba(0,0,0,.65);
+
+    backdrop-filter:blur(8px);
+
+    display:none;
+
+    align-items:flex-end;
+}
+
+.card{
+
+    width:100%;
+
+    background:#111827;
+
+    border-radius:24px 24px 0 0;
+
+    padding:25px 20px 28px;
+
+    text-align:center;
+
+    border-top:1px solid rgba(255,255,255,.1);
+}
+
+.big-avatar{
+
+    width:100px;
+
+    height:100px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    background:linear-gradient(
+        145deg,
+        #26354f,
+        #101827
+    );
+
+    border:3px solid #42e8a4;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:55px;
+
+    box-shadow:0 10px 35px rgba(0,0,0,.35);
+}
+
+.profile-name{
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    margin-top:12px;
+}
+
+.profile-distance{
+
+    color:#94a3b8;
+
+    font-size:12px;
+
+    margin:5px 0 18px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn{
+
+    width:100%;
+
+    border:0;
+
+    padding:13px;
+
+    border-radius:12px;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    margin-top:8px;
+}
+
+.connect{
+
+    background:#42e8a4;
+
+    color:#06120e;
+}
+
+.cancel{
+
+    background:#263244;
+
+    color:white;
+}
+
+
+/* =========================
+   REQUEST POPUP
+========================= */
+
+.request-overlay{
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:110;
+
+    background:rgba(0,0,0,.7);
+
+    backdrop-filter:blur(7px);
+
+    display:none;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:22px;
+}
+
+.request-card{
+
+    width:100%;
+
+    max-width:380px;
+
+    background:#111827;
+
+    border-radius:22px;
+
+    padding:25px 20px;
+
+    text-align:center;
+
+    border:1px solid rgba(255,255,255,.1);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.5);
+}
+
+.request-avatar{
+
+    width:90px;
+
+    height:90px;
+
+    border-radius:50%;
+
+    margin:auto;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:52px;
+
+    background:#1e293b;
+
+    border:3px solid #7dd3fc;
+}
+
+.request-title{
+
+    font-size:19px;
+
+    font-weight:bold;
+
+    margin-top:13px;
+}
+
+.request-text{
+
+    color:#94a3b8;
+
+    font-size:12px;
+
+    margin:7px 0 10px;
+}
+
+.request-position{
+
+    color:#42e8a4;
+
+    font-size:10px;
+
+    margin-bottom:10px;
+}
+
+.accept{
+
+    background:#42e8a4;
+
+    color:#06120e;
+}
+
+.reject{
+
+    background:#263244;
+
+    color:white;
+}
+
+
+/* =========================
+   CHAT SCREEN
+========================= */
+
+.chat-screen{
+
+    position:absolute;
+
+    inset:0;
+
+    z-index:80;
+
+    display:none;
+
+    flex-direction:column;
+
+    background:#f1f5f9;
+
+    color:#111827;
+
+    overflow:hidden;
+}
+
+
+/* =========================
+   CHAT HEADER
+========================= */
+
+.chat-head{
+
+    width:100%;
+
+    height:68px;
+
+    flex:0 0 68px;
+
+    background:#111827;
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:10px 15px;
+}
+
+.chat-avatar{
+
+    width:45px;
+
+    height:45px;
+
+    flex:0 0 45px;
+
+    border-radius:50%;
+
+    background:#1e293b;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:25px;
+}
+
+.chat-user-info{
+
+    flex:1;
+
+    min-width:0;
+
+    overflow:hidden;
+}
+
+.chat-user{
+
+    font-weight:bold;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+.chat-status{
+
+    color:#42e8a4;
+
+    font-size:10px;
+
+    margin-top:2px;
+}
+
+.chat-actions{
+
+    margin-left:auto;
+
+    flex:0 0 auto;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+}
+
+
+/* =========================
+   CHAT HEADER BUTTONS
+========================= */
+
+.pending-btn,
+.disconnect-btn{
+
+    width:38px;
+
+    height:38px;
+
+    flex:0 0 38px;
+
+    border:0;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    position:relative;
+
+    font-size:16px;
+}
+
+.pending-btn{
+
+    background:#263244;
+
+    color:white;
+}
+
+.pending-btn:hover{
+
+    background:#334155;
+}
+
+.disconnect-btn{
+
+    background:#ef4444;
+
+    color:white;
+}
+
+.disconnect-btn:hover{
+
+    background:#dc2626;
+}
+
+.pending-btn span{
+
+    position:absolute;
+
+    top:-4px;
+
+    right:-4px;
+
+    min-width:17px;
+
+    height:17px;
+
+    padding:0 4px;
+
+    border-radius:20px;
+
+    background:#f59e0b;
+
+    color:#111827;
+
+    font-size:9px;
+
+    font-weight:bold;
+
+    display:none;
+
+    align-items:center;
+
+    justify-content:center;
+}
+
+
+/* =========================
+   MESSAGES
+========================= */
+
+.messages{
+
+    flex:1 1 auto;
+
+    min-height:0;
+
+    width:100%;
+
+    overflow-y:auto;
+
+    padding:15px;
+
+    background:#f1f5f9;
+}
+
+.msg{
+
+    max-width:78%;
+
+    padding:10px 13px;
+
+    margin-bottom:9px;
+
+    border-radius:16px;
+
+    font-size:14px;
+
+    word-break:break-word;
+}
+
+.msg.me{
+
+    margin-left:auto;
+
+    background:#2563eb;
+
+    color:white;
+
+    border-bottom-right-radius:4px;
+}
+
+.msg.other{
+
+    background:white;
+
+    border-bottom-left-radius:4px;
+}
+
+
+/* =========================
+   CHAT INPUT
+========================= */
+
+.chat-input{
+
+    width:100%;
+
+    flex:0 0 auto;
+
+    display:flex;
+
+    gap:7px;
+
+    padding:10px;
+
+    background:white;
+
+    border-top:1px solid #ddd;
+}
+
+.chat-input input{
+
+    flex:1;
+
+    min-width:0;
+
+    border:1px solid #d1d5db;
+
+    border-radius:10px;
+
+    padding:11px;
+
+    outline:none;
+}
+
+.chat-input button{
+
+    flex:0 0 auto;
+
+    border:0;
+
+    border-radius:10px;
+
+    background:#2563eb;
+
+    color:white;
+
+    padding:0 16px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:400px){
+
+    .radar{
+
+        width:340px;
+
+        height:340px;
+    }
+
+    .chat-head{
+
+        padding:10px 10px;
+    }
+
+    .chat-actions{
+
+        gap:5px;
+    }
+
+    .pending-btn,
+    .disconnect-btn{
+
+        width:36px;
+
+        height:36px;
+
+        flex-basis:36px;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+<!-- =========================
+     MAIN HEADER
+========================= -->
+
+<header class="header">
+
+    <div>
+
+        <div class="logo">
+            Gup<span>Shup</span>
+        </div>
+
+        <div class="subtitle">
+            Anonymous Radar
+        </div>
+
+    </div>
+
+
+    <div class="online">
+        ● RADAR ON
+    </div>
+
+</header>
+
+
+<!-- STATUS -->
+
+<div id="status"
+     class="status">
+
+    📍 Getting location...
+
+</div>
+
+
+<!-- TOAST -->
+
+<div id="toast"
+     class="toast">
+</div>
+
+
+<!-- =========================
+     RADAR
+========================= -->
+
+<main id="radarScreen"
+      class="radar-area">
+
+
+    <div class="radar">
+
+        <div class="ring r1"></div>
+
+        <div class="ring r2"></div>
+
+        <div class="ring r3"></div>
+
+        <div class="cross-v"></div>
+
+        <div class="cross-h"></div>
+
+        <div class="sweep"></div>
+
+    </div>
+
+
+    <div class="you">
+
+        <div class="you-icon">
+            ◎
+        </div>
+
+    </div>
+
+
+    <div class="you-label">
+        YOU
+    </div>
+
+
+    <div id="radarUsers"></div>
+
+
+    <div class="bottom-info">
+
+        <div class="radar-help">
+            👆 Tap any profile on the radar to view
+        </div>
+
+    </div>
+
+
+</main>
+
+
+<!-- =========================
+     PROFILE MODAL
+========================= -->
+
+<div id="profileModal"
+     class="modal">
+
+
+    <div class="card">
+
+
+        <div id="bigAvatar"
+             class="big-avatar">
+
+            🙂
+
+        </div>
+
+
+        <div id="profileName"
+             class="profile-name">
+
+            Stranger
+
+        </div>
+
+
+        <div id="profileDistance"
+             class="profile-distance">
+
+            Nearby
+
+        </div>
+
+
+        <button id="connectBtn"
+                class="btn connect">
+
+            📨 Request to GupShup
+
+        </button>
+
+
+        <button id="cancelBtn"
+                class="btn cancel">
+
+            Cancel
+
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+<!-- =========================
+     REQUEST POPUP
+========================= -->
+
+<div id="requestOverlay"
+     class="request-overlay">
+
+
+    <div class="request-card">
+
+
+        <div id="requestAvatar"
+             class="request-avatar">
+
+            🙂
+
+        </div>
+
+
+        <div class="request-title">
+
+            Someone wants to GupShup
+
+        </div>
+
+
+        <div id="requestText"
+             class="request-text">
+
+            A stranger wants to start a conversation.
+
+        </div>
+
+
+        <div id="requestPosition"
+             class="request-position">
+
+            Request 1 of 1
+
+        </div>
+
+
+        <button id="acceptBtn"
+                class="btn accept">
+
+            ✓ Accept
+
+        </button>
+
+
+        <button id="rejectBtn"
+                class="btn reject">
+
+            ✕ Reject
+
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+<!-- =========================
+     CHAT
+========================= -->
+
+<div id="chatScreen"
+     class="chat-screen">
+
+
+    <div class="chat-head">
+
+
+        <div id="chatAvatar"
+             class="chat-avatar">
+
+            🙂
+
+        </div>
+
+
+        <div class="chat-user-info">
+
+
+            <div id="chatUser"
+                 class="chat-user">
+
+                Stranger
+
+            </div>
+
+
+            <div class="chat-status">
+
+                ● Anonymous connection
+
+            </div>
+
+
+        </div>
+
+
+        <div class="chat-actions">
+
+
+            <button id="pendingBtn"
+                    class="pending-btn"
+                    title="Pending requests">
+
+                🔔
+
+                <span id="pendingCount">
+                    0
+                </span>
+
+            </button>
+
+
+            <button id="disconnectBtn"
+                    class="disconnect-btn"
+                    title="Disconnect chat">
+
+                ✕
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+    <div id="messages"
+         class="messages">
+
+    </div>
+
+
+    <div class="chat-input">
+
+
+        <input id="messageInput"
+               type="text"
+               placeholder="Type your message..."
+               autocomplete="off">
+
+
+        <button id="sendBtn">
+
+            Send
+
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+</div>
+
+
+<script src="/socket.io/socket.io.js"></script>
+
+
+<script>
+
+
+// =========================
+// SOCKET
+// =========================
+
+const socket = io();
+
+
+// =========================
+// DOM ELEMENTS
+// =========================
+
+const status =
+    document.getElementById(
+        "status"
+    );
+
+const radarUsers =
+    document.getElementById(
+        "radarUsers"
+    );
+
+const profileModal =
+    document.getElementById(
+        "profileModal"
+    );
+
+const bigAvatar =
+    document.getElementById(
+        "bigAvatar"
+    );
+
+const profileName =
+    document.getElementById(
+        "profileName"
+    );
+
+const profileDistance =
+    document.getElementById(
+        "profileDistance"
+    );
+
+const connectBtn =
+    document.getElementById(
+        "connectBtn"
+    );
+
+const cancelBtn =
+    document.getElementById(
+        "cancelBtn"
+    );
+
+const requestOverlay =
+    document.getElementById(
+        "requestOverlay"
+    );
+
+const requestAvatar =
+    document.getElementById(
+        "requestAvatar"
+    );
+
+const requestText =
+    document.getElementById(
+        "requestText"
+    );
+
+const requestPosition =
+    document.getElementById(
+        "requestPosition"
+    );
+
+const acceptBtn =
+    document.getElementById(
+        "acceptBtn"
+    );
+
+const rejectBtn =
+    document.getElementById(
+        "rejectBtn"
+    );
+
+const chatScreen =
+    document.getElementById(
+        "chatScreen"
+    );
+
+const chatAvatar =
+    document.getElementById(
+        "chatAvatar"
+    );
+
+const chatUser =
+    document.getElementById(
+        "chatUser"
+    );
+
+const messages =
+    document.getElementById(
+        "messages"
+    );
+
+const messageInput =
+    document.getElementById(
+        "messageInput"
+    );
+
+const sendBtn =
+    document.getElementById(
+        "sendBtn"
+    );
+
+const toast =
+    document.getElementById(
+        "toast"
+    );
+
+const pendingBtn =
+    document.getElementById(
+        "pendingBtn"
+    );
+
+const pendingCount =
+    document.getElementById(
+        "pendingCount"
+    );
+
+const disconnectBtn =
+    document.getElementById(
+        "disconnectBtn"
+    );
+
+
+// =========================
+// DEVICE ID
+// =========================
+
+let deviceId =
+    localStorage.getItem(
+        "gupshupDeviceId"
+    );
+
+
+if(!deviceId){
+
+    deviceId =
+        "GS-" +
+        Math.random()
+            .toString(36)
+            .substring(2,10)
+            .toUpperCase();
+
+
+    localStorage.setItem(
+        "gupshupDeviceId",
+        deviceId
+    );
+
+}
+
+
+// =========================
+// STATE
+// =========================
+
+let selectedUser = null;
+
+
+/*
+ * सभी incoming requests
+ * इस array में सुरक्षित रहेंगी.
+ *
+ * Example:
+ *
+ * [
+ *   request C,
+ *   request D,
+ *   request E
+ * ]
+ */
+
+let pendingRequests = [];
+
+
+/*
+ * जिस request का popup
+ * अभी खुला है.
+ */
+
+let incomingRequest = null;
+
+
+// =========================
+// SOCKET CONNECT
+// =========================
+
+socket.on(
+    "connect",
+    () => {
+
+        status.textContent =
+            "🟢 Radar connected";
+
+
+        socket.emit(
+            "register",
+            {
+
+                deviceId:
+                    deviceId
+
+            }
+        );
+
+
+        requestLocation();
+
+    }
+);
+
+
+// =========================
+// LOCATION
+// =========================
+
+function requestLocation(){
+
+    if(
+        !navigator.geolocation
+    ){
+
+        status.textContent =
+            "Location not supported";
+
+        return;
+
+    }
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        position => {
+
+            socket.emit(
+                "location",
+                {
+
+                    lat:
+                        position.coords.latitude,
+
+                    lng:
+                        position.coords.longitude
+
+                }
+            );
+
+
+            status.textContent =
+                "🟢 Radar active";
+
+
+            loadRadar();
+
+        },
+
+
+        () => {
+
+            status.textContent =
+                "📍 Allow location for Radar";
+
+        },
+
+
+        {
+
+            enableHighAccuracy:true,
+
+            maximumAge:10000,
+
+            timeout:10000
+
+        }
+
+    );
+
+}
+
+
+// =========================
+// LOAD RADAR
+// =========================
+
+function loadRadar(){
+
+    socket.emit(
+        "get-radar-users"
+    );
+
+}
+
+
+setInterval(
+    loadRadar,
+    5000
+);
+
+
+// =========================
+// RADAR USERS
+// =========================
+
+socket.on(
+    "radar-users",
+    users => {
+
+        radarUsers.innerHTML =
+            "";
+
+
+        users.forEach(
+            (
+                user,
+                index
+            ) => {
+
+                createRadarProfile(
+                    user,
+                    index,
+                    users.length
+                );
+
+            }
+        );
+
+
+        status.textContent =
+            `🟢 Radar active • ${users.length} nearby`;
+
+    }
+);
+
+
+// =========================
+// CREATE RADAR PROFILE
+// =========================
+
+function createRadarProfile(
+    user,
+    index,
+    total
+){
+
+    const profile =
+        document.createElement(
+            "div"
+        );
+
+
+    profile.className =
+        "radar-profile";
+
+
+    const angle =
+        (
+            index /
+            Math.max(
+                total,
+                1
+            )
+        ) *
+        Math.PI *
+        2;
+
+
+    const ring =
+        index % 3;
+
+
+    const radius =
+        ring === 0
+            ? 70
+            : ring === 1
+                ? 135
+                : 190;
+
+
+    const x =
+        Math.cos(angle) *
+        radius;
+
+
+    const y =
+        Math.sin(angle) *
+        radius;
+
+
+    profile.style.left =
+        `calc(50% + ${x}px)`;
+
+
+    profile.style.top =
+        `calc(48% + ${y}px)`;
+
+
+    profile.style.transform =
+        "translate(-50%,-50%)";
+
+
+    profile.textContent =
+        user.avatar;
+
+
+    const onlineDot =
+        document.createElement(
+            "div"
+        );
+
+
+    onlineDot.className =
+        "dot";
+
+
+    const distance =
+        document.createElement(
+            "div"
+        );
+
+
+    distance.className =
+        "distance";
+
+
+    distance.textContent =
+        formatDistance(
+            user.distance
+        );
+
+
+    profile.appendChild(
+        onlineDot
+    );
+
+
+    profile.appendChild(
+        distance
+    );
+
+
+    profile.onclick =
+        () => {
+
+            selectProfile(
+                user
+            );
+
+        };
+
+
+    radarUsers.appendChild(
+        profile
+    );
+
+}
+
+
+// =========================
+// SELECT PROFILE
+// =========================
+
+function selectProfile(
+    user
+){
+
+    selectedUser =
+        user;
+
+
+    bigAvatar.textContent =
+        user.avatar;
+
+
+    profileName.textContent =
+        user.name;
+
+
+    profileDistance.textContent =
+        "📍 " +
+        formatDistance(
+            user.distance
+        );
+
+
+    profileModal.style.display =
+        "flex";
+
+}
+
+
+// =========================
+// CANCEL PROFILE
+// =========================
+
+cancelBtn.onclick =
+    () => {
+
+        selectedUser =
+            null;
+
+
+        profileModal.style.display =
+            "none";
+
+    };
+
+
+// =========================
+// SEND REQUEST
+// =========================
+
+connectBtn.onclick =
+    () => {
+
+        if(!selectedUser)
+            return;
+
+
+        socket.emit(
+            "send-request",
+            selectedUser.id
+        );
+
+
+        profileModal.style.display =
+            "none";
+
+
+        showToast(
+            "📨 Request sent. Waiting for acceptance..."
+        );
+
+    };
+
+
+// =========================
+// REQUEST SENT
+// =========================
+
+socket.on(
+    "request-sent",
+    () => {
+
+        showToast(
+            "⏳ Waiting for stranger to accept..."
+        );
+
+    }
+);
+
+
+// =========================
+// NEW INCOMING REQUEST
+// =========================
+
+socket.on(
+    "connection-request",
+    data => {
+
+        /*
+         * Duplicate request protection.
+         *
+         * अगर किसी कारण से वही request
+         * दो बार आ जाए तो दो बार queue नहीं होगी.
+         */
+
+        const alreadyExists =
+            pendingRequests.some(
+                request =>
+                    request.requestId ===
+                    data.requestId
+            );
+
+
+        if(alreadyExists){
+
+            return;
+
+        }
+
+
+        /*
+         * नई request queue में add करें.
+         */
+
+        pendingRequests.push(
+            data
+        );
+
+
+        /*
+         * Bell count update.
+         */
+
+        updatePendingButton();
+
+
+        /*
+         * अगर अभी chat नहीं चल रही
+         * तो popup automatically दिखाएँ.
+         */
+
+        if(
+            chatScreen.style.display !==
+            "flex"
+        ){
+
+            showNextPendingRequest();
+
+        }
+
+        else{
+
+            /*
+             * Chat में हैं तो सिर्फ
+             * 🔔 badge दिखेगा.
+             */
+
+            showToast(
+                `🔔 New request received (${pendingRequests.length} pending)`
+            );
+
+        }
+
+    }
+);
+
+
+// =========================
+// UPDATE PENDING BUTTON
+// =========================
+
+function updatePendingButton(){
+
+    const count =
+        pendingRequests.length;
+
+
+    pendingCount.textContent =
+        count;
+
+
+    if(count > 0){
+
+        pendingCount.style.display =
+            "flex";
+
+    }
+
+    else{
+
+        pendingCount.style.display =
+            "none";
+
+    }
+
+}
+
+
+// =========================
+// SHOW NEXT REQUEST
+// =========================
+
+function showNextPendingRequest(){
+
+    /*
+     * कोई pending request नहीं है
+     */
+
+    if(
+        pendingRequests.length === 0
+    ){
+
+        requestOverlay.style.display =
+            "none";
+
+
+        incomingRequest =
+            null;
+
+
+        updatePendingButton();
+
+        return;
+
+    }
+
+
+    /*
+     * Queue की पहली request.
+     */
+
+    const data =
+        pendingRequests[0];
+
+
+    incomingRequest =
+        data.requestId;
+
+
+    requestAvatar.textContent =
+        data.avatar;
+
+
+    requestText.textContent =
+        `${data.name} wants to GupShup with you.`;
+
+
+    requestPosition.textContent =
+        `Request 1 of ${pendingRequests.length}`;
+
+
+    requestOverlay.style.display =
+        "flex";
+
+}
+
+
+// =========================
+// PENDING BUTTON
+// =========================
+
+pendingBtn.onclick =
+    () => {
+
+        /*
+         * Bell दबाने पर
+         * queue की current first request
+         * popup में दिखाएँ.
+         */
+
+        showNextPendingRequest();
+
+    };
+
+
+// =========================
+// ACCEPT REQUEST
+// =========================
+
+acceptBtn.onclick =
+    () => {
+
+        if(!incomingRequest)
+            return;
+
+
+        /*
+         * Server को request accept
+         * करने के लिए भेजें.
+         */
+
+        socket.emit(
+            "accept-request",
+            incomingRequest
+        );
+
+    };
+
+
+// =========================
+// ACCEPTED BY SERVER
+// =========================
+
+socket.on(
+    "request-accepted",
+    user => {
+
+        /*
+         * जिस request को अभी accept किया गया
+         * वह queue की पहली request है.
+         *
+         * इसलिए केवल वही remove करें.
+         */
+
+        if(
+            pendingRequests.length > 0
+        ){
+
+            if(
+                pendingRequests[0]
+                    .requestId ===
+                incomingRequest
+            ){
+
+                pendingRequests.shift();
+
+            }
+
+            else{
+
+                /*
+                 * Safety:
+                 * अगर queue order किसी वजह से बदल गया,
+                 * तो exact request खोजकर remove करें.
+                 */
+
+                const index =
+                    pendingRequests.findIndex(
+                        request =>
+                            request.requestId ===
+                            incomingRequest
+                    );
+
+
+                if(index !== -1){
+
+                    pendingRequests.splice(
+                        index,
+                        1
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        incomingRequest =
+            null;
+
+
+        requestOverlay.style.display =
+            "none";
+
+
+        updatePendingButton();
+
+
+        /*
+         * Auto Switch:
+         * पुरानी chat बंद होकर
+         * नई chat खुलेगी.
+         */
+
+        openChat(
+            user
+        );
+
+    }
+);
+
+
+// =========================
+// REQUEST REJECTED
+// =========================
+
+rejectBtn.onclick =
+    () => {
+
+        if(!incomingRequest)
+            return;
+
+
+        const rejectedId =
+            incomingRequest;
+
+
+        /*
+         * Server को reject भेजें.
+         */
+
+        socket.emit(
+            "reject-request",
+            rejectedId
+        );
+
+
+        /*
+         * सिर्फ rejected request
+         * queue से remove करें.
+         */
+
+        const index =
+            pendingRequests.findIndex(
+                request =>
+                    request.requestId ===
+                    rejectedId
+            );
+
+
+        if(index !== -1){
+
+            pendingRequests.splice(
+                index,
+                1
+            );
+
+        }
+
+
+        incomingRequest =
+            null;
+
+
+        requestOverlay.style.display =
+            "none";
+
+
+        updatePendingButton();
+
+
+        showToast(
+            "Request rejected"
+        );
+
+
+        /*
+         * अगर और request बाकी हैं,
+         * तो थोड़ी देर बाद अगली request दिखाएँ.
+         */
+
+        if(
+            pendingRequests.length > 0
+        ){
+
+            setTimeout(
+                () => {
+
+                    showNextPendingRequest();
+
+                },
+                250
+            );
+
+        }
+
+    };
+
+
+// =========================
+// REQUEST REJECTED BY OTHER SIDE
+// =========================
+
+socket.on(
+    "request-rejected",
+    () => {
+
+        showToast(
+            "❌ Stranger rejected the request"
+        );
+
+    }
+);
+
+
+// =========================
+// OPEN CHAT
+// =========================
+
+function openChat(
+    user
+){
+
+    document.getElementById(
+        "radarScreen"
+    ).style.display =
+        "none";
+
+
+    chatScreen.style.display =
+        "flex";
+
+
+    chatAvatar.textContent =
+        user.avatar;
+
+
+    chatUser.textContent =
+        user.name;
+
+
+    messages.innerHTML = `
+
+        <div style="
+            text-align:center;
+            color:#64748b;
+            font-size:11px;
+            margin-bottom:15px;
+        ">
+
+            🔐 Both users accepted the connection.
+
+            <br>
+
+            You can now GupShup anonymously.
+
+        </div>
+
+    `;
+
+
+    updatePendingButton();
+
+
+    messageInput.focus();
+
+}
+
+
+// =========================
+// SEND MESSAGE
+// =========================
+
+sendBtn.onclick =
+    sendMessage;
+
+
+messageInput.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Enter"
+        ){
+
+            event.preventDefault();
+
+            sendMessage();
+
+        }
+
+    }
+);
+
+
+function sendMessage(){
+
+    const text =
+        messageInput.value.trim();
+
+
+    if(!text)
+        return;
+
+
+    addMessage(
+        text,
+        "me"
+    );
+
+
+    socket.emit(
+        "message",
+        text
+    );
+
+
+    messageInput.value =
+        "";
+
+}
+
+
+// =========================
+// RECEIVE MESSAGE
+// =========================
+
+socket.on(
+    "message",
+    data => {
+
+        addMessage(
+            data.text,
+            "other"
+        );
+
+    }
+);
+
+
+// =========================
+// ADD MESSAGE
+// =========================
+
+function addMessage(
+    text,
+    type
+){
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.className =
+        "msg " + type;
+
+
+    div.textContent =
+        text;
+
+
+    messages.appendChild(
+        div
+    );
+
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
+}
+
+
+// =========================
+// DISCONNECT CHAT
+// =========================
+
+disconnectBtn.onclick =
+    () => {
+
+        socket.emit(
+            "next-stranger"
+        );
+
+
+        chatScreen.style.display =
+            "none";
+
+
+        document.getElementById(
+            "radarScreen"
+        ).style.display =
+            "block";
+
+
+        messages.innerHTML =
+            "";
+
+
+        selectedUser =
+            null;
+
+
+        loadRadar();
+
+
+        /*
+         * IMPORTANT:
+         *
+         * pendingRequests को clear
+         * नहीं किया जा रहा.
+         *
+         * इसलिए pending requests
+         * disconnect के बाद भी सुरक्षित रहेंगी.
+         */
+
+        updatePendingButton();
+
+
+        showToast(
+            "👋 Chat disconnected"
+        );
+
+
+        /*
+         * अगर pending requests हैं,
+         * तो थोड़ी देर बाद पहली request
+         * automatically दिखाएँ.
+         */
+
+        if(
+            pendingRequests.length > 0
+        ){
+
+            setTimeout(
+                () => {
+
+                    showNextPendingRequest();
+
+                },
+                350
+            );
+
+        }
+
+    };
+
+
+// =========================
+// STRANGER LEFT
+// =========================
+
+socket.on(
+    "stranger-left",
+    () => {
+
+        chatScreen.style.display =
+            "none";
+
+
+        document.getElementById(
+            "radarScreen"
+        ).style.display =
+            "block";
+
+
+        showToast(
+            "👋 Stranger left the chat"
+        );
+
+
+        loadRadar();
+
+
+        /*
+         * Pending requests
+         * सुरक्षित रहेंगी.
+         */
+
+        updatePendingButton();
+
+
+        if(
+            pendingRequests.length > 0
+        ){
+
+            setTimeout(
+                () => {
+
+                    showNextPendingRequest();
+
+                },
+                350
+            );
+
+        }
+
+    }
+);
+
+
+// =========================
+// REQUEST ERROR
+// =========================
+
+socket.on(
+    "request-error",
+    message => {
+
+        showToast(
+            "⚠️ " + message
+        );
+
+    }
+);
+
+
+// =========================
+// TOAST
+// =========================
+
+function showToast(
+    text
+){
+
+    toast.textContent =
+        text;
+
+
+    toast.style.display =
+        "block";
+
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+
+    window.toastTimer =
+        setTimeout(
+            () => {
+
+                toast.style.display =
+                    "none";
+
+            },
+            3500
+        );
+
+}
+
+
+// =========================
+// DISTANCE
+// =========================
+
+function formatDistance(
+    km
+){
+
+    if(km < 1){
+
+        return Math.round(
+            km * 1000
+        ) + " m";
+
+    }
+
+
+    return km.toFixed(1) +
+        " km";
+
+}
+
+
+// =========================
+// INITIAL PENDING STATE
+// =========================
+
+updatePendingButton();
+
+</script>
+
+</body>
+
+</html>
