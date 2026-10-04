@@ -960,7 +960,7 @@ socket.on("location", (location) => {
 
 socket.on(
     "disconnect",
-    () => {
+    (reason) => {
 
         const user =
             getUser(
@@ -1063,9 +1063,13 @@ socket.on(
 
 
         console.log(
-            "Disconnected:",
-            user.deviceId
-        );
+    "Disconnected:",
+    user.deviceId,
+    "| Socket:",
+    socket.id,
+    "| Reason:",
+    reason
+);
 
     }
 );
