@@ -955,104 +955,120 @@ socket.on("location", (location) => {
 
 
         // =========================
-        // SOCKET DISCONNECT
-        // =========================
+// SOCKET DISCONNECT
+// =========================
 
-        socket.on(
-            "disconnect",
-            () => {
+socket.on(
+    "disconnect",
+    () => {
 
-                const user =
-                    getUser(
-                        socket.deviceId
+        const user =
+            getUser(
+                socket.deviceId
+            );
+
+
+        if (!user)
+            return;
+
+
+        // अगर इसी device का नया socket
+        // पहले ही connect हो चुका है,
+        // तो पुराने socket का disconnect
+        // user को offline नहीं करेगा।
+
+        if (
+            user.socketId &&
+            user.socketId !== socket.id
+        ) {
+
+            console.log(
+                "Old socket disconnected:",
+                user.deviceId
+            );
+
+            return;
+
+        }
+
+
+        user.online =
+            false;
+
+
+        // अगर chat में था
+
+        if (user.partner) {
+
+            const partner =
+                getUser(
+                    user.partner
+                );
+
+
+            if (partner) {
+
+                partner.partner =
+                    null;
+
+
+                const partnerSocket =
+                    getSocket(
+                        partner
                     );
 
 
-                if (!user)
-                    return;
+                if (partnerSocket) {
 
-
-                user.online =
-                    false;
-
-
-                // अगर chat में था
-
-                if (user.partner) {
-
-                    const partner =
-                        getUser(
-                            user.partner
-                        );
-
-
-                    if (partner) {
-
-                        partner.partner =
-                            null;
-
-
-                        const partnerSocket =
-                            getSocket(
-                                partner
-                            );
-
-
-                        if (partnerSocket) {
-
-                            partnerSocket.emit(
-                                "stranger-left"
-                            );
-
-                        }
-
-                    }
-
-
-                    user.partner =
-                        null;
+                    partnerSocket.emit(
+                        "stranger-left"
+                    );
 
                 }
 
-
-                // Pending requests साफ करें
-
-                for (
-                    const [
-                        id,
-                        request
-                    ]
-                    of requests
-                ) {
-
-                    if (
-                        request.sender ===
-                        user.deviceId ||
-
-                        request.receiver ===
-                        user.deviceId
-                    ) {
-
-                        requests.delete(
-                            id
-                        );
-
-                    }
-
-                }
+            }
 
 
-                console.log(
-                    "Disconnected:",
-                    user.deviceId
+            user.partner =
+                null;
+
+        }
+
+
+        // Pending requests साफ करें
+
+        for (
+            const [
+                id,
+                request
+            ]
+            of requests
+        ) {
+
+            if (
+                request.sender ===
+                user.deviceId ||
+
+                request.receiver ===
+                user.deviceId
+            ) {
+
+                requests.delete(
+                    id
                 );
 
             }
+
+        }
+
+
+        console.log(
+            "Disconnected:",
+            user.deviceId
         );
 
     }
 );
-
 
 // =========================
 // HOME
