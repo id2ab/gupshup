@@ -87,8 +87,10 @@ function distanceKm(
 
 function getUser(deviceId) {
 
-    return users.get(deviceId);
+    if (!deviceId)
+        return null;
 
+    return users.get(deviceId);
 }
 
 
@@ -101,23 +103,18 @@ function getSocket(user) {
     if (!user)
         return null;
 
+    if (!user.socketId)
+        return null;
+
     return io.sockets.sockets.get(
         user.socketId
     );
-
 }
 
 
 // =========================
-// DISCONNECT A CURRENT CHAT
+// DISCONNECT CURRENT CHAT
 // =========================
-//
-// यह function Auto Switch के लिए है.
-//
-// अगर किसी user की पहले से chat चल रही है,
-// तो उसकी पुरानी chat को साफ करेगा
-// और दूसरे user को "stranger-left" भेजेगा.
-//
 
 function disconnectCurrentChat(user) {
 
@@ -147,7 +144,6 @@ function disconnectCurrentChat(user) {
         );
 
     }
-
 }
 
 
@@ -177,22 +173,35 @@ io.on(
                     !data ||
                     !data.deviceId
                 ) {
+
+                    console.log(
+                        "REGISTER INVALID"
+                    );
+
                     return;
                 }
 
-
-                let user =
-                    users.get(
+                const deviceId =
+                    String(
                         data.deviceId
                     );
 
+                let user =
+                    users.get(
+                        deviceId
+                    );
+
+
+                // =========================
+                // NEW USER
+                // =========================
 
                 if (!user) {
 
                     user = {
 
                         deviceId:
-                            data.deviceId,
+                            deviceId,
 
                         socketId:
                             socket.id,
@@ -217,13 +226,17 @@ io.on(
 
                     };
 
-
                     users.set(
-                        data.deviceId,
+                        deviceId,
                         user
                     );
 
                 }
+
+
+                // =========================
+                // EXISTING USER
+                // =========================
 
                 else {
 
@@ -237,7 +250,15 @@ io.on(
 
 
                 socket.deviceId =
-                    data.deviceId;
+                    deviceId;
+
+
+                console.log(
+                    "Registered:",
+                    deviceId,
+                    "| Socket:",
+                    socket.id
+                );
 
 
                 socket.emit(
@@ -261,38 +282,62 @@ io.on(
 
 
         // =========================
-// LOCATION
-// =========================
+        // LOCATION
+        // =========================
 
-socket.on("location", (location) => {
+        socket.on(
+            "location",
+            (location) => {
 
-    const user = getUser(socket.deviceId);
+                const user =
+                    getUser(
+                        socket.deviceId
+                    );
 
-    if (!user) {
-        console.log("LOCATION ERROR: user not found");
-        return;
-    }
 
-    if (
-        !location ||
-        typeof location.lat !== "number" ||
-        typeof location.lng !== "number"
-    ) {
-        console.log(
-            "LOCATION INVALID:",
-            socket.deviceId
+                if (!user) {
+
+                    console.log(
+                        "LOCATION ERROR: user not found"
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !location ||
+                    typeof location.lat !== "number" ||
+                    typeof location.lng !== "number"
+                ) {
+
+                    console.log(
+                        "LOCATION INVALID:",
+                        socket.deviceId
+                    );
+
+                    return;
+                }
+
+
+                user.lat =
+                    location.lat;
+
+                user.lng =
+                    location.lng;
+
+                user.online =
+                    true;
+
+
+                console.log(
+                    "LOCATION OK:",
+                    socket.deviceId
+                );
+
+            }
         );
-        return;
-    }
 
-    user.lat = location.lat;
-    user.lng = location.lng;
-
-    console.log(
-        "LOCATION OK:",
-        socket.deviceId
-    );
-});
 
         // =========================
         // RADAR
@@ -323,7 +368,6 @@ socket.on("location", (location) => {
                     );
 
                     return;
-
                 }
 
 
@@ -341,7 +385,6 @@ socket.on("location", (location) => {
                     ) {
 
                         continue;
-
                     }
 
 
@@ -355,7 +398,6 @@ socket.on("location", (location) => {
                     ) {
 
                         continue;
-
                     }
 
 
@@ -368,7 +410,9 @@ socket.on("location", (location) => {
                         );
 
 
-                    // 25 KM radar range
+                    // =========================
+                    // 25 KM RADAR RANGE
+                    // =========================
 
                     if (distance <= 25) {
 
@@ -397,7 +441,9 @@ socket.on("location", (location) => {
                 }
 
 
-                // Nearest first
+                // =========================
+                // NEAREST FIRST
+                // =========================
 
                 radarUsers.sort(
                     (a, b) =>
@@ -406,7 +452,9 @@ socket.on("location", (location) => {
                 );
 
 
-                // Maximum 60 strangers
+                // =========================
+                // MAXIMUM 60 USERS
+                // =========================
 
                 socket.emit(
                     "radar-users",
@@ -445,7 +493,6 @@ socket.on("location", (location) => {
                 ) {
 
                     return;
-
                 }
 
 
@@ -455,7 +502,6 @@ socket.on("location", (location) => {
                 ) {
 
                     return;
-
                 }
 
 
@@ -463,19 +509,13 @@ socket.on("location", (location) => {
                     return;
 
 
-                /*
-                 * Busy user को भी request भेज सकते हैं.
-                 *
-                 * इससे current chat में मौजूद
-                 * user भी नई request receive कर सकता है.
-                 */
-
-
                 const requestId =
                     `${sender.deviceId}_${receiver.deviceId}`;
 
 
-                // Duplicate request रोकें
+                // =========================
+                // DUPLICATE REQUEST
+                // =========================
 
                 if (
                     requests.has(
@@ -489,7 +529,6 @@ socket.on("location", (location) => {
                     );
 
                     return;
-
                 }
 
 
@@ -520,18 +559,18 @@ socket.on("location", (location) => {
                     );
 
                     return;
-
                 }
 
 
-                // Receiver को request
+                // =========================
+                // SEND REQUEST TO RECEIVER
+                // =========================
 
                 receiverSocket.emit(
                     "connection-request",
                     {
 
                         requestId:
-
                             requestId,
 
                         avatar:
@@ -544,18 +583,18 @@ socket.on("location", (location) => {
                 );
 
 
-                // Sender confirmation
+                // =========================
+                // SENDER CONFIRMATION
+                // =========================
 
                 socket.emit(
                     "request-sent",
                     {
 
                         requestId:
-
                             requestId,
 
                         targetId:
-
                             receiver.deviceId
 
                     }
@@ -591,7 +630,7 @@ socket.on("location", (location) => {
                     return;
 
 
-                // केवल receiver accept कर सकता है
+                // केवल receiver accept करेगा
 
                 if (
                     request.receiver !==
@@ -599,7 +638,6 @@ socket.on("location", (location) => {
                 ) {
 
                     return;
-
                 }
 
 
@@ -624,28 +662,17 @@ socket.on("location", (location) => {
                     );
 
                     return;
-
                 }
 
 
                 // =========================
                 // AUTO SWITCH
                 // =========================
-                //
-                // अगर receiver किसी पुरानी chat में है
-                // तो पहले वह पुरानी chat बंद होगी.
-                //
-                // अगर sender भी किसी पुरानी chat में है
-                // तो उसकी पुरानी chat भी बंद होगी.
-                //
-                // उसके बाद दोनों नई chat में connect होंगे.
-                // =========================
-
 
                 if (receiver.partner) {
 
                     console.log(
-                        "Auto disconnect receiver old chat:",
+                        "Auto disconnect receiver:",
                         receiver.deviceId,
                         "<->",
                         receiver.partner
@@ -661,7 +688,7 @@ socket.on("location", (location) => {
                 if (sender.partner) {
 
                     console.log(
-                        "Auto disconnect sender old chat:",
+                        "Auto disconnect sender:",
                         sender.deviceId,
                         "<->",
                         sender.partner
@@ -740,8 +767,6 @@ socket.on("location", (location) => {
                 }
 
 
-                // Request complete
-
                 requests.delete(
                     requestId
                 );
@@ -782,7 +807,6 @@ socket.on("location", (location) => {
                 ) {
 
                     return;
-
                 }
 
 
@@ -872,11 +896,12 @@ socket.on("location", (location) => {
                     {
 
                         text:
-                            String(message)
-                                .slice(
-                                    0,
-                                    1000
-                                )
+                            String(
+                                message
+                            ).slice(
+                                0,
+                                1000
+                            )
 
                     }
                 );
@@ -886,7 +911,7 @@ socket.on("location", (location) => {
 
 
         // =========================
-        // DISCONNECT CURRENT CHAT
+        // NEXT STRANGER
         // =========================
 
         socket.on(
@@ -955,124 +980,134 @@ socket.on("location", (location) => {
 
 
         // =========================
-// SOCKET DISCONNECT
-// =========================
+        // SOCKET DISCONNECT
+        // =========================
 
-socket.on(
-    "disconnect",
-    (reason) => {
+        socket.on(
+            "disconnect",
+            (reason) => {
 
-        const user =
-            getUser(
-                socket.deviceId
-            );
-
-
-        if (!user)
-            return;
-
-
-        // अगर इसी device का नया socket
-        // पहले ही connect हो चुका है,
-        // तो पुराने socket का disconnect
-        // user को offline नहीं करेगा।
-
-        if (
-            user.socketId &&
-            user.socketId !== socket.id
-        ) {
-
-            console.log(
-                "Old socket disconnected:",
-                user.deviceId
-            );
-
-            return;
-
-        }
-
-
-        user.online =
-            false;
-
-
-        // अगर chat में था
-
-        if (user.partner) {
-
-            const partner =
-                getUser(
-                    user.partner
-                );
-
-
-            if (partner) {
-
-                partner.partner =
-                    null;
-
-
-                const partnerSocket =
-                    getSocket(
-                        partner
+                const user =
+                    getUser(
+                        socket.deviceId
                     );
 
 
-                if (partnerSocket) {
+                if (!user)
+                    return;
 
-                    partnerSocket.emit(
-                        "stranger-left"
+
+                // =========================
+                // OLD SOCKET CHECK
+                // =========================
+
+                if (
+                    user.socketId &&
+                    user.socketId !== socket.id
+                ) {
+
+                    console.log(
+                        "Old socket disconnected:",
+                        user.deviceId,
+                        "| Socket:",
+                        socket.id,
+                        "| Reason:",
+                        reason
                     );
+
+                    return;
+                }
+
+
+                user.online =
+                    false;
+
+
+                // =========================
+                // CURRENT CHAT
+                // =========================
+
+                if (user.partner) {
+
+                    const partner =
+                        getUser(
+                            user.partner
+                        );
+
+
+                    if (partner) {
+
+                        partner.partner =
+                            null;
+
+
+                        const partnerSocket =
+                            getSocket(
+                                partner
+                            );
+
+
+                        if (partnerSocket) {
+
+                            partnerSocket.emit(
+                                "stranger-left"
+                            );
+
+                        }
+
+                    }
+
+
+                    user.partner =
+                        null;
 
                 }
 
-            }
+
+                // =========================
+                // REMOVE PENDING REQUESTS
+                // =========================
+
+                for (
+                    const [
+                        id,
+                        request
+                    ]
+                    of requests
+                ) {
+
+                    if (
+                        request.sender ===
+                        user.deviceId ||
+
+                        request.receiver ===
+                        user.deviceId
+                    ) {
+
+                        requests.delete(
+                            id
+                        );
+
+                    }
+
+                }
 
 
-            user.partner =
-                null;
-
-        }
-
-
-        // Pending requests साफ करें
-
-        for (
-            const [
-                id,
-                request
-            ]
-            of requests
-        ) {
-
-            if (
-                request.sender ===
-                user.deviceId ||
-
-                request.receiver ===
-                user.deviceId
-            ) {
-
-                requests.delete(
-                    id
+                console.log(
+                    "Disconnected:",
+                    user.deviceId,
+                    "| Socket:",
+                    socket.id,
+                    "| Reason:",
+                    reason
                 );
 
             }
-
-        }
-
-
-        console.log(
-    "Disconnected:",
-    user.deviceId,
-    "| Socket:",
-    socket.id,
-    "| Reason:",
-    reason
-);
+        );
 
     }
 );
+
 
 // =========================
 // HOME
