@@ -750,8 +750,12 @@ body{
 
 .chat-input{
     flex-shrink:0;
-    position:relative;
-    z-index:10;
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:100;
+    padding:10px;
     padding-bottom:calc(10px + env(safe-area-inset-bottom));
 }
 
@@ -1547,7 +1551,45 @@ const disconnectBtn =
     document.getElementById(
         "disconnectBtn"
     );
+// =========================
+// MOBILE KEYBOARD HANDLING
+// =========================
 
+if (window.visualViewport) {
+
+    const adjustChatForKeyboard = () => {
+
+        const viewport = window.visualViewport;
+
+        const keyboardHeight =
+            Math.max(
+                0,
+                window.innerHeight -
+                viewport.height -
+                viewport.offsetTop
+            );
+
+        const chatInput =
+            document.querySelector(".chat-input");
+
+        if (!chatInput) return;
+
+        chatInput.style.bottom =
+            keyboardHeight + "px";
+    };
+
+    window.visualViewport.addEventListener(
+        "resize",
+        adjustChatForKeyboard
+    );
+
+    window.visualViewport.addEventListener(
+        "scroll",
+        adjustChatForKeyboard
+    );
+
+    adjustChatForKeyboard();
+}
 
 // =========================
 // DEVICE ID
