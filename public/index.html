@@ -508,6 +508,52 @@ body{
     border-bottom-left-radius:4px;
 }
 
+.typing-indicator{
+    position:absolute;
+    left:15px;
+    bottom:76px;
+    display:none;
+    align-items:center;
+    gap:4px;
+    padding:6px 10px;
+    border-radius:14px;
+    background:#e5e7eb;
+    color:#6b7280;
+    font-size:12px;
+    z-index:90;
+}
+
+.typing-indicator span:not(.typing-text){
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:#6b7280;
+    animation:typingDot 1.2s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2){
+    animation-delay:.15s;
+}
+
+.typing-indicator span:nth-child(3){
+    animation-delay:.3s;
+}
+
+.typing-text{
+    margin-left:3px;
+}
+
+@keyframes typingDot{
+    0%,60%,100%{
+        opacity:.35;
+        transform:translateY(0);
+    }
+    30%{
+        opacity:1;
+        transform:translateY(-2px);
+    }
+}
+
 .chat-input{
     position:absolute;
     left:0;
@@ -730,6 +776,12 @@ body{
 
         </div>
 
+        <div id="typingIndicator"
+             class="typing-indicator">
+            <span></span><span></span><span></span>
+            <span class="typing-text">typing...</span>
+        </div>
+
         <div id="messages"
              class="messages">
         </div>
@@ -814,6 +866,9 @@ const chatUser =
 
 const messages =
     document.getElementById("messages");
+
+const typingIndicator =
+    document.getElementById("typingIndicator");
 
 const messageInput =
     document.getElementById("messageInput");
@@ -1465,6 +1520,49 @@ function openChat(user){
 }
 
 
+let typingTimer = null;
+let isTyping = false;
+
+function setTypingState(state){
+
+    if(state === isTyping)
+        return;
+
+    isTyping = state;
+
+    socket.emit(
+        "typing",
+        state
+    );
+}
+
+messageInput.addEventListener(
+    "input",
+    () => {
+
+        if(messageInput.value.trim()){
+
+            setTypingState(true);
+
+            clearTimeout(typingTimer);
+
+            typingTimer = setTimeout(
+                () => {
+                    setTypingState(false);
+                },
+                900
+            );
+
+        }else{
+
+            clearTimeout(typingTimer);
+            setTypingState(false);
+
+        }
+
+    }
+);
+
 /* SEND MESSAGE */
 
 sendBtn.onclick =
@@ -1500,6 +1598,9 @@ function sendMessage(){
         "me"
     );
 
+    clearTimeout(typingTimer);
+    setTypingState(false);
+
     socket.emit(
         "message",
         text
@@ -1514,10 +1615,31 @@ socket.on(
     "message",
     data => {
 
+        if(typingIndicator){
+            typingIndicator.style.display = "none";
+        }
+
         addMessage(
             data.text,
             "other"
         );
+
+    }
+);
+
+
+socket.on(
+    "typing",
+    state => {
+
+        if(!typingIndicator)
+            return;
+
+        typingIndicator.style.display =
+            state ? "flex" : "none";
+
+        messages.scrollTop =
+            messages.scrollHeight;
 
     }
 );
@@ -1556,6 +1678,13 @@ const disconnectBtn =
 
 disconnectBtn.onclick = () => {
 
+    clearTimeout(typingTimer);
+    setTypingState(false);
+
+    if(typingIndicator){
+        typingIndicator.style.display = "none";
+    }
+
     socket.emit(
         "next-stranger"
     );
@@ -1589,6 +1718,13 @@ disconnectBtn.onclick = () => {
 socket.on(
     "stranger-left",
     () => {
+
+        clearTimeout(typingTimer);
+        isTyping = false;
+
+        if(typingIndicator){
+            typingIndicator.style.display = "none";
+        }
 
         chatScreen.style.display =
             "none";
