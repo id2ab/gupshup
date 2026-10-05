@@ -447,126 +447,143 @@ io.on(
 
 
         // =========================
-        // CONNECTION REQUEST
-        // =========================
+// CONNECTION REQUEST
+// =========================
 
-        socket.on(
-            "send-request",
-            (data) => {
+socket.on(
+    "send-request",
+    (data) => {
 
-                if (
-                    !data ||
-                    !data.targetId
-                ) {
-                    return;
-                }
+        // Frontend currently sends selectedUser.id directly
+        // Also support object format for compatibility
+        const targetId =
+            typeof data === "string"
+                ? data
+                : data?.targetId;
 
-
-                const sender =
-                    getUser(
-                        socket.deviceId
-                    );
+        if (!targetId) {
+            return;
+        }
 
 
-                const receiver =
-                    getUser(
-                        data.targetId
-                    );
+        const sender =
+            getUser(
+                socket.deviceId
+            );
 
 
-                if (!sender)
-                    return;
-
-                if (!receiver)
-                    return;
-
-
-                if (
-                    sender.deviceId ===
-                    receiver.deviceId
-                ) {
-                    return;
-                }
+        const receiver =
+            getUser(
+                targetId
+            );
 
 
-                if (!receiver.online)
-                    return;
+        if (!sender)
+            return;
+
+        if (!receiver)
+            return;
 
 
-                if (sender.partner)
-                    return;
+        if (
+            sender.deviceId ===
+            receiver.deviceId
+        ) {
+            return;
+        }
 
 
-                if (receiver.partner)
-                    return;
+        if (!receiver.online)
+            return;
 
 
-                const receiverSocket =
-                    getSocket(
-                        receiver
-                    );
+        if (sender.partner)
+            return;
 
 
-                if (!receiverSocket)
-                    return;
+        if (receiver.partner)
+            return;
 
 
-                const requestId =
-                    "REQ-" +
-                    Date.now() +
-                    "-" +
-                    Math.random()
-                        .toString(36)
-                        .slice(2, 8);
+        const receiverSocket =
+            getSocket(
+                receiver
+            );
 
 
-                const request = {
-
-                    requestId:
-                        requestId,
-
-                    sender:
-                        sender.deviceId,
-
-                    receiver:
-                        receiver.deviceId
-
-                };
+        if (!receiverSocket)
+            return;
 
 
-                requests.set(
+        const requestId =
+            "REQ-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .slice(2, 8);
+
+
+        const request = {
+
+            requestId:
+                requestId,
+
+            sender:
+                sender.deviceId,
+
+            receiver:
+                receiver.deviceId
+
+        };
+
+
+        requests.set(
+            requestId,
+            request
+        );
+
+
+        receiverSocket.emit(
+            "connection-request",
+            {
+
+                requestId:
                     requestId,
-                    request
-                );
 
+                avatar:
+                    sender.avatar,
 
-                receiverSocket.emit(
-                    "incoming-request",
-                    {
-
-                        requestId:
-                            requestId,
-
-                        avatar:
-                            sender.avatar,
-
-                        name:
-                            sender.name
-
-                    }
-                );
-
-
-                console.log(
-                    "Request:",
-                    sender.deviceId,
-                    "->",
-                    receiver.deviceId
-                );
+                name:
+                    sender.name
 
             }
         );
 
+
+        socket.emit(
+            "request-sent",
+            {
+
+                requestId:
+                    requestId,
+
+                targetId:
+                    receiver.deviceId
+
+            }
+        );
+
+
+        console.log(
+            "Request:",
+            sender.deviceId,
+            "->",
+            receiver.deviceId
+        );
+
+    }
+);
 
         // =========================
         // ACCEPT REQUEST
