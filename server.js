@@ -87,10 +87,8 @@ function distanceKm(
 
 function getUser(deviceId) {
 
-    if (!deviceId)
-        return null;
-
     return users.get(deviceId);
+
 }
 
 
@@ -103,12 +101,10 @@ function getSocket(user) {
     if (!user)
         return null;
 
-    if (!user.socketId)
-        return null;
-
     return io.sockets.sockets.get(
         user.socketId
     );
+
 }
 
 
@@ -144,6 +140,7 @@ function disconnectCurrentChat(user) {
         );
 
     }
+
 }
 
 
@@ -173,35 +170,22 @@ io.on(
                     !data ||
                     !data.deviceId
                 ) {
-
-                    console.log(
-                        "REGISTER INVALID"
-                    );
-
                     return;
                 }
 
-                const deviceId =
-                    String(
-                        data.deviceId
-                    );
 
                 let user =
                     users.get(
-                        deviceId
+                        data.deviceId
                     );
 
-
-                // =========================
-                // NEW USER
-                // =========================
 
                 if (!user) {
 
                     user = {
 
                         deviceId:
-                            deviceId,
+                            data.deviceId,
 
                         socketId:
                             socket.id,
@@ -226,17 +210,13 @@ io.on(
 
                     };
 
+
                     users.set(
-                        deviceId,
+                        data.deviceId,
                         user
                     );
 
                 }
-
-
-                // =========================
-                // EXISTING USER
-                // =========================
 
                 else {
 
@@ -250,21 +230,7 @@ io.on(
 
 
                 socket.deviceId =
-                    deviceId;
-
-
-                console.log(
-                    "Registered:",
-                    deviceId,
-                    "| Socket:",
-                    socket.id
-                );
-                console.log(
-                "DEVICE INFO:",
-                socket.deviceId,
-                "| User-Agent:",
-                socket.handshake.headers["user-agent"]
-                );
+                    data.deviceId;
 
 
                 socket.emit(
@@ -281,6 +247,22 @@ io.on(
                             user.name
 
                     }
+                );
+
+
+                console.log(
+                    "Registered:",
+                    user.deviceId,
+                    "| Socket:",
+                    socket.id
+                );
+
+
+                console.log(
+                    "DEVICE INFO:",
+                    socket.deviceId,
+                    "| User-Agent:",
+                    socket.handshake.headers["user-agent"]
                 );
 
             }
@@ -332,9 +314,6 @@ io.on(
                 user.lng =
                     location.lng;
 
-                user.online =
-                    true;
-
 
                 console.log(
                     "LOCATION OK:",
@@ -364,8 +343,10 @@ io.on(
 
 
                 if (
-                    currentUser.lat === null ||
-                    currentUser.lng === null
+                    typeof currentUser.lat !==
+                        "number" ||
+                    typeof currentUser.lng !==
+                        "number"
                 ) {
 
                     socket.emit(
@@ -377,19 +358,21 @@ io.on(
                 }
 
 
-                const radarUsers = [];
+                const nearbyUsers = [];
 
 
                 for (
-                    const user
-                    of users.values()
+                    const [
+                        id,
+                        user
+                    ]
+                    of users
                 ) {
 
                     if (
-                        user.deviceId ===
+                        id ===
                         currentUser.deviceId
                     ) {
-
                         continue;
                     }
 
@@ -399,10 +382,11 @@ io.on(
 
 
                     if (
-                        user.lat === null ||
-                        user.lng === null
+                        typeof user.lat !==
+                            "number" ||
+                        typeof user.lng !==
+                            "number"
                     ) {
-
                         continue;
                     }
 
@@ -416,14 +400,19 @@ io.on(
                         );
 
 
-                    // =========================
-                    // 25 KM RADAR RANGE
-                    // =========================
+                    console.log(
+                        "RADAR DISTANCE:",
+                        currentUser.deviceId,
+                        "->",
+                        user.deviceId,
+                        distance,
+                        "KM"
+                    );
 
-                    console.log("RADAR DISTANCE:", currentUser.deviceId, "->", user.deviceId, distance, "KM");
+
                     if (distance <= 25) {
 
-                        radarUsers.push(
+                        nearbyUsers.push(
                             {
 
                                 id:
@@ -436,9 +425,9 @@ io.on(
                                     user.name,
 
                                 distance:
-                                    Math.round(
-                                        distance * 10
-                                    ) / 10
+                                    Number(
+                                        distance.toFixed(1)
+                                    )
 
                             }
                         );
@@ -448,27 +437,9 @@ io.on(
                 }
 
 
-                // =========================
-                // NEAREST FIRST
-                // =========================
-
-                radarUsers.sort(
-                    (a, b) =>
-                        a.distance -
-                        b.distance
-                );
-
-
-                // =========================
-                // MAXIMUM 60 USERS
-                // =========================
-
                 socket.emit(
                     "radar-users",
-                    radarUsers.slice(
-                        0,
-                        60
-                    )
+                    nearbyUsers
                 );
 
             }
@@ -476,38 +447,44 @@ io.on(
 
 
         // =========================
-        // SEND CONNECTION REQUEST
+        // CONNECTION REQUEST
         // =========================
 
         socket.on(
             "send-request",
-            (targetId) => {
+            (data) => {
+
+                if (
+                    !data ||
+                    !data.targetId
+                ) {
+                    return;
+                }
+
 
                 const sender =
                     getUser(
                         socket.deviceId
                     );
 
+
                 const receiver =
                     getUser(
-                        targetId
+                        data.targetId
                     );
 
 
-                if (
-                    !sender ||
-                    !receiver
-                ) {
-
+                if (!sender)
                     return;
-                }
+
+                if (!receiver)
+                    return;
 
 
                 if (
                     sender.deviceId ===
                     receiver.deviceId
                 ) {
-
                     return;
                 }
 
@@ -516,41 +493,12 @@ io.on(
                     return;
 
 
-                const requestId =
-                    `${sender.deviceId}_${receiver.deviceId}`;
-
-
-                // =========================
-                // DUPLICATE REQUEST
-                // =========================
-
-                if (
-                    requests.has(
-                        requestId
-                    )
-                ) {
-
-                    socket.emit(
-                        "request-error",
-                        "Request already sent."
-                    );
-
+                if (sender.partner)
                     return;
-                }
 
 
-                requests.set(
-                    requestId,
-                    {
-
-                        sender:
-                            sender.deviceId,
-
-                        receiver:
-                            receiver.deviceId
-
-                    }
-                );
+                if (receiver.partner)
+                    return;
 
 
                 const receiverSocket =
@@ -559,22 +507,41 @@ io.on(
                     );
 
 
-                if (!receiverSocket) {
-
-                    requests.delete(
-                        requestId
-                    );
-
+                if (!receiverSocket)
                     return;
-                }
 
 
-                // =========================
-                // SEND REQUEST TO RECEIVER
-                // =========================
+                const requestId =
+                    "REQ-" +
+                    Date.now() +
+                    "-" +
+                    Math.random()
+                        .toString(36)
+                        .slice(2, 8);
+
+
+                const request = {
+
+                    requestId:
+                        requestId,
+
+                    sender:
+                        sender.deviceId,
+
+                    receiver:
+                        receiver.deviceId
+
+                };
+
+
+                requests.set(
+                    requestId,
+                    request
+                );
+
 
                 receiverSocket.emit(
-                    "connection-request",
+                    "incoming-request",
                     {
 
                         requestId:
@@ -585,24 +552,6 @@ io.on(
 
                         name:
                             sender.name
-
-                    }
-                );
-
-
-                // =========================
-                // SENDER CONFIRMATION
-                // =========================
-
-                socket.emit(
-                    "request-sent",
-                    {
-
-                        requestId:
-                            requestId,
-
-                        targetId:
-                            receiver.deviceId
 
                     }
                 );
@@ -637,21 +586,13 @@ io.on(
                     return;
 
 
-                // केवल receiver accept करेगा
-
                 if (
                     request.receiver !==
                     socket.deviceId
                 ) {
-
                     return;
                 }
 
-
-                const sender =
-                    getUser(
-                        request.sender
-                    );
 
                 const receiver =
                     getUser(
@@ -659,10 +600,55 @@ io.on(
                     );
 
 
-                if (
-                    !sender ||
-                    !receiver
-                ) {
+                const sender =
+                    getUser(
+                        request.sender
+                    );
+
+
+                if (!receiver)
+                    return;
+
+                if (!sender)
+                    return;
+
+
+                /*
+                 * अगर receiver पहले से किसी
+                 * chat में है तो पुरानी chat
+                 * disconnect होगी.
+                 */
+
+                if (receiver.partner) {
+
+                    disconnectCurrentChat(
+                        receiver
+                    );
+
+                }
+
+
+                /*
+                 * Sender अगर पहले से chat
+                 * में है तो request reject.
+                 */
+
+                if (sender.partner) {
+
+                    const senderSocket =
+                        getSocket(
+                            sender
+                        );
+
+
+                    if (senderSocket) {
+
+                        senderSocket.emit(
+                            "request-busy"
+                        );
+
+                    }
+
 
                     requests.delete(
                         requestId
@@ -672,67 +658,27 @@ io.on(
                 }
 
 
-                // =========================
-                // AUTO SWITCH
-                // =========================
-
-                if (receiver.partner) {
-
-                    console.log(
-                        "Auto disconnect receiver:",
-                        receiver.deviceId,
-                        "<->",
-                        receiver.partner
-                    );
-
-                    disconnectCurrentChat(
-                        receiver
-                    );
-
-                }
-
-
-                if (sender.partner) {
-
-                    console.log(
-                        "Auto disconnect sender:",
-                        sender.deviceId,
-                        "<->",
-                        sender.partner
-                    );
-
-                    disconnectCurrentChat(
-                        sender
-                    );
-
-                }
-
-
-                // =========================
-                // CONNECT BOTH USERS
-                // =========================
+                receiver.partner =
+                    sender.deviceId;
 
                 sender.partner =
                     receiver.deviceId;
 
-                receiver.partner =
-                    sender.deviceId;
-
-
-                const senderSocket =
-                    getSocket(
-                        sender
-                    );
 
                 const receiverSocket =
                     getSocket(
                         receiver
                     );
 
+                const senderSocket =
+                    getSocket(
+                        sender
+                    );
 
-                // =========================
-                // SENDER ENTERS CHAT
-                // =========================
+
+                /*
+                 * Sender enters chat
+                 */
 
                 if (senderSocket) {
 
@@ -752,9 +698,9 @@ io.on(
                 }
 
 
-                // =========================
-                // RECEIVER ENTERS CHAT
-                // =========================
+                /*
+                 * Receiver enters chat
+                 */
 
                 if (receiverSocket) {
 
@@ -773,6 +719,10 @@ io.on(
 
                 }
 
+
+                /*
+                 * Accepted request delete
+                 */
 
                 requests.delete(
                     requestId
@@ -812,7 +762,6 @@ io.on(
                     request.receiver !==
                     socket.deviceId
                 ) {
-
                     return;
                 }
 
@@ -850,6 +799,57 @@ io.on(
                 console.log(
                     "Rejected:",
                     requestId
+                );
+
+            }
+        );
+
+
+        // =========================
+        // TYPING INDICATOR
+        // =========================
+
+        socket.on(
+            "typing",
+            (state) => {
+
+                const user =
+                    getUser(
+                        socket.deviceId
+                    );
+
+
+                if (!user)
+                    return;
+
+
+                if (!user.partner)
+                    return;
+
+
+                const partner =
+                    getUser(
+                        user.partner
+                    );
+
+
+                if (!partner)
+                    return;
+
+
+                const partnerSocket =
+                    getSocket(
+                        partner
+                    );
+
+
+                if (!partnerSocket)
+                    return;
+
+
+                partnerSocket.emit(
+                    "typing",
+                    Boolean(state)
                 );
 
             }
@@ -903,12 +903,11 @@ io.on(
                     {
 
                         text:
-                            String(
-                                message
-                            ).slice(
-                                0,
-                                1000
-                            )
+                            String(message)
+                                .slice(
+                                    0,
+                                    1000
+                                )
 
                     }
                 );
@@ -918,7 +917,7 @@ io.on(
 
 
         // =========================
-        // NEXT STRANGER
+        // DISCONNECT CURRENT CHAT
         // =========================
 
         socket.on(
@@ -1004,9 +1003,11 @@ io.on(
                     return;
 
 
-                // =========================
-                // OLD SOCKET CHECK
-                // =========================
+                /*
+                 * अगर इसी device का नया socket
+                 * पहले ही connect हो चुका है,
+                 * तो पुराने socket को ignore करें।
+                 */
 
                 if (
                     user.socketId &&
@@ -1023,6 +1024,7 @@ io.on(
                     );
 
                     return;
+
                 }
 
 
@@ -1030,9 +1032,7 @@ io.on(
                     false;
 
 
-                // =========================
-                // CURRENT CHAT
-                // =========================
+                // अगर chat में था
 
                 if (user.partner) {
 
@@ -1071,9 +1071,7 @@ io.on(
                 }
 
 
-                // =========================
-                // REMOVE PENDING REQUESTS
-                // =========================
+                // Pending requests साफ करें
 
                 for (
                     const [
