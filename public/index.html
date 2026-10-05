@@ -737,7 +737,23 @@ body{
 
     overflow:hidden;
 }
+.chat-screen{
+    height:100dvh;
+    min-height:100dvh;
+    overflow:hidden;
+}
 
+.messages{
+    min-height:0;
+    padding-bottom:10px;
+}
+
+.chat-input{
+    flex-shrink:0;
+    position:relative;
+    z-index:10;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+}
 
 /* =========================
    CHAT HEADER
