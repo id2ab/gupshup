@@ -749,14 +749,15 @@ body{
 }
 
 .chat-input{
+    display:flex;
+    gap:7px;
     flex-shrink:0;
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
+    position:relative;
     z-index:100;
     padding:10px;
     padding-bottom:calc(10px + env(safe-area-inset-bottom));
+    background:white;
+    border-top:1px solid #ddd;
 }
 
 /* =========================
